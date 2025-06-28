@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | Modern Blog Hub</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/">
+                <i class="fas fa-feather-alt text-primary me-2"></i>
+                Modern Blog Hub
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/blogs">All Blogs</a>
+                    </li>
+                    <% if (user) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blogs/create">Write</a>
+                    </li>
+                    <% } %>
+                </ul>
+                
+                <!-- Search Form -->
+                <form class="d-flex me-3" action="/search" method="GET">
+                    <div class="input-group">
+                        <input class="form-control" type="search" name="q" placeholder="Search blogs...">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav">
+                    <% if (user) { %>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" 
+                           id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle fs-5 me-2"></i>
+                            <%= user.username %>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/users/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="/users/profile">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/auth/logout" method="POST" class="d-inline">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <% } else { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary btn-sm ms-2" href="/auth/register">Sign Up</a>
+                    </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="bg-primary text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h1 class="display-5 fw-bold mb-3">Discover Amazing Stories</h1>
+                    <p class="lead">Explore our collection of blogs across various categories and find content that inspires you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="py-4 bg-light border-bottom">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filter & Sort
+                    </h6>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-3 justify-content-md-end">
+                        <!-- Category Filter -->
+                        <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="all" <%= category === 'all' ? 'selected' : '' %>>All Categories</option>
+                            <% categories.forEach(cat => { %>
+                            <option value="<%= cat %>" <%= category === cat ? 'selected' : '' %>><%= cat %></option>
+                            <% }); %>
+                        </select>
+                        
+                        <!-- Sort Filter -->
+                        <select id="sortFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                            <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                            <option value="popular" <%= sort === 'popular' ? 'selected' : '' %>>Most Popular</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blogs Grid -->
+    <section class="py-5">
+        <div class="container">
+            <% if (blogs && blogs.length > 0) { %>
+            <div class="row g-4">
+                <% blogs.forEach(blog => { %>
+                <div class="col-lg-4 col-md-6">
+                    <article class="blog-card card h-100 border-0 shadow-sm hover-lift">
+                        <% if (blog.featuredImage) { %>
+                        <div class="blog-image-container">
+                            <img src="<%= blog.featuredImage %>" class="card-img-top blog-image" 
+                                 alt="<%= blog.title %>">
+                            <div class="blog-overlay">
+                                <div class="blog-categories">
+                                    <% blog.categories.slice(0, 2).forEach(category => { %>
+                                    <span class="badge bg-primary"><%= category %></span>
+                                    <% }) %>
+                                </div>
+                            </div>
+                        </div>
+                        <% } else { %>
+                        <div class="blog-image-container bg-gradient-primary d-flex align-items-center justify-content-center">
+                            <div class="text-center text-white">
+                                <i class="fas fa-book-open fa-3x mb-3 opacity-50"></i>
+                                <div class="blog-categories">
+                                    <% blog.categories.slice(0, 2).forEach(category => { %>
+                                    <span class="badge bg-light text-dark"><%= category %></span>
+                                    <% }) %>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <div class="blog-meta mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    <a href="/users/<%= blog.author.username %>" class="text-decoration-none">
+                                        <%= blog.author.username %>
+                                    </a>
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-clock me-1"></i>
+                                    <%= blog.readTime %> min read
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <%= new Date(blog.createdAt).toLocaleDateString() %>
+                                </small>
+                            </div>
+                            
+                            <h3 class="card-title h5 fw-bold mb-3">
+                                <a href="/blogs/<%= blog.slug %>" class="text-dark text-decoration-none">
+                                    <%= blog.title %>
+                                </a>
+                            </h3>
+                            
+                            <p class="card-text text-muted mb-3 flex-grow-1">
+                                <%= blog.excerpt || blog.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...' %>
+                            </p>
+                            
+                            <!-- Tags -->
+                            <% if (blog.tags && blog.tags.length > 0) { %>
+                            <div class="mb-3">
+                                <% blog.tags.slice(0, 3).forEach(tag => { %>
+                                <span class="badge bg-light text-dark me-1">#<%= tag %></span>
+                                <% }) %>
+                            </div>
+                            <% } %>
+                            
+                            <div class="blog-stats d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i><%= blog.views %>
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-heart me-1"></i><%= blog.likes.length %>
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-comment me-1"></i><%= blog.commentCount || 0 %>
+                                    </small>
+                                </div>
+                                <a href="/blogs/<%= blog.slug %>" class="btn btn-sm btn-outline-primary">
+                                    Read More <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <% }) %>
+            </div>
+            
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+            <nav aria-label="Blog pagination" class="mt-5">
+                <ul class="pagination pagination-lg justify-content-center">
+                    <!-- Previous Page -->
+                    <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage - 1 %>&category=<%= category %>&sort=<%= sort %>">
+                            <i class="fas fa-chevron-left me-1"></i>Previous
+                        </a>
+                    </li>
+                    <% } %>
+                    
+                    <!-- Page Numbers -->
+                    <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>&category=<%= category %>&sort=<%= sort %>">
+                            <%= i %>
+                        </a>
+                    </li>
+                    <% } %>
+                    
+                    <!-- Next Page -->
+                    <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= currentPage + 1 %>&category=<%= category %>&sort=<%= sort %>">
+                            Next<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </li>
+                    <% } %>
+                </ul>
+                
+                <div class="text-center text-muted">
+                    Page <%= currentPage %> of <%= totalPages %>
+                </div>
+            </nav>
+            <% } %>
+            
+            <% } else { %>
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-search fs-1 text-muted mb-4"></i>
+                    <h3>No blogs found</h3>
+                    <p class="text-muted mb-4">
+                        <% if (category !== 'all') { %>
+                        No blogs found in the "<%= category %>" category.
+                        <% } else { %>
+                        There are no published blogs yet.
+                        <% } %>
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <% if (category !== 'all') { %>
+                        <a href="/blogs" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View All Blogs
+                        </a>
+                        <% } %>
+                        <% if (user) { %>
+                        <a href="/blogs/create" class="btn btn-primary">
+                            <i class="fas fa-pen me-2"></i>Write First Blog
+                        </a>
+                        <% } else { %>
+                        <a href="/auth/register" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Join to Write
+                        </a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </section>
+
+    <!-- Categories CTA -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold mb-3">Explore by Category</h3>
+                <p class="text-muted">Discover content that matches your interests</p>
+            </div>
+            
+            <div class="row g-3">
+                <% 
+                const categoryIcons = {
+                    'Arts and Culture': 'fas fa-palette',
+                    'Science and Technology': 'fas fa-flask',
+                    'History': 'fas fa-landmark',
+                    'Politics': 'fas fa-vote-yea',
+                    'Sports': 'fas fa-running',
+                    'Social': 'fas fa-users'
+                };
+                %>
+                <% categories.forEach(cat => { %>
+                <div class="col-md-4 col-lg-2">
+                    <a href="?category=<%= encodeURIComponent(cat) %>" 
+                       class="category-link text-decoration-none">
+                        <div class="text-center p-3 rounded <%= category === cat ? 'bg-primary text-white' : 'bg-white' %> hover-lift">
+                            <i class="<%= categoryIcons[cat] || 'fas fa-tag' %> fs-4 mb-2"></i>
+                            <div class="small fw-semibold"><%= cat %></div>
+                        </div>
+                    </a>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-feather-alt text-primary me-2"></i>
+                        Modern Blog Hub
+                    </h5>
+                    <p class="text-muted">
+                        A platform for sharing ideas, stories, and insights across various categories.
+                        Express yourself and connect with a community of writers and readers.
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-3">Categories</h6>
+                    <ul class="list-unstyled">
+                        <% categories.forEach(cat => { %>
+                        <li><a href="?category=<%= encodeURIComponent(cat) %>" 
+                               class="text-muted text-decoration-none"><%= cat %></a></li>
+                        <% }) %>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-muted text-decoration-none">Home</a></li>
+                        <li><a href="/blogs" class="text-muted text-decoration-none">All Blogs</a></li>
+                        <% if (user) { %>
+                        <li><a href="/blogs/create" class="text-muted text-decoration-none">Write Blog</a></li>
+                        <li><a href="/users/dashboard" class="text-muted text-decoration-none">Dashboard</a></li>
+                        <% } else { %>
+                        <li><a href="/auth/login" class="text-muted text-decoration-none">Login</a></li>
+                        <li><a href="/auth/register" class="text-muted text-decoration-none">Sign Up</a></li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/main.js"></script>
+    
+    <script>
+        // Auto-submit form when filters change
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            updateURL();
+        });
+        
+        document.getElementById('sortFilter').addEventListener('change', function() {
+            updateURL();
+        });
+        
+        function updateURL() {
+            const category = document.getElementById('categoryFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            const url = new URL(window.location);
+            
+            url.searchParams.set('category', category);
+            url.searchParams.set('sort', sort);
+            url.searchParams.set('page', '1'); // Reset to first page
+            
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>
