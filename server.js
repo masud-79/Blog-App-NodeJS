@@ -18,6 +18,9 @@ mongoose.connect(process.env.MONGODB_URI)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Trust proxy for Railway deployment (fixes rate limiting warnings)
+app.set('trust proxy', true);
+
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
