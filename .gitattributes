@@ -1,0 +1,26 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force batch scripts to have CRLF line endings
+*.bat text eol=crlf
+
+# Force shell scripts to have LF line endings
+*.sh text eol=lf
+
+# Ensure these files are treated as text
+*.js text
+*.json text
+*.md text
+*.html text
+*.css text
+*.ejs text
+*.env text
+*.env.example text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
